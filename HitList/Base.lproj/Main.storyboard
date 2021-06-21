@@ -36,7 +36,7 @@
                     <navigationItem key="navigationItem" id="Xmx-nW-X0p">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="Iz0-TY-mYW">
                             <connections>
-                                <action selector="addName:" destination="BYZ-38-t0r" id="vvp-AA-NsG"/>
+                                <action selector="addButtonTapped:" destination="BYZ-38-t0r" id="9T8-Db-bRx"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>

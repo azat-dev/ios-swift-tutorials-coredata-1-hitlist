@@ -6,12 +6,13 @@
 //
 
 import UIKit
+import CoreData
 
 class ViewController: UIViewController {
     
     @IBOutlet weak var tableView: UITableView!
     
-    var names = [String]()
+    private var people = [NSManagedObject]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,7 +21,60 @@ class ViewController: UIViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
     }
     
-    @IBAction func addName(_ sender: UIBarButtonItem) {
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        loadData()
+    }
+    
+    private func loadData() {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Person")
+        
+        do {
+            people = try managedContext.fetch(request)
+            
+        } catch let error as NSError {
+            print("Can't fetch data. \(error), \(error.userInfo)")
+        }
+        
+        tableView.reloadData()
+    }
+    
+    private func addPerson(name: String) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        guard let personEntity = NSEntityDescription.entity(forEntityName: "Person", in: managedContext) else {
+            return
+        }
+        
+        let person = NSManagedObject(entity: personEntity, insertInto: managedContext)
+        
+        person.setValue(name, forKey: "name")
+        
+        do {
+            try managedContext.save()
+            
+        } catch let error as NSError {
+            print("Can't save. \(error), \(error.userInfo)")
+            return
+        }
+        
+        people.append(person)
+        
+        let index = IndexPath(row: people.count - 1, section: 0)
+        tableView.insertRows(at: [index], with: .automatic)
+    }
+    
+    @IBAction func addButtonTapped(_ sender: UIBarButtonItem) {
         let alert = UIAlertController(
             title: "New name",
             message: "Add a new name",
@@ -41,9 +95,7 @@ class ViewController: UIViewController {
                 return
             }
             
-            self.names.append(text)
-            let index = IndexPath(row: self.names.count - 1, section: 0)
-            self.tableView.insertRows(at: [index], with: .automatic)
+            self.addPerson(name: text)
         })
         
         alert.addAction(saveAction)
@@ -55,14 +107,14 @@ class ViewController: UIViewController {
 // MARK: - UITableViewDataSource
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return names.count
+        return people.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        let person = people[indexPath.row]
         
-        cell.textLabel?.text = names[indexPath.row]
+        cell.textLabel?.text = person.value(forKey: "name") as? String
         
         return cell
     }
